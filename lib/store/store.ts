@@ -30,6 +30,10 @@ export interface DataStore {
   getProject(id: string): Promise<MirrorProject | null>
   listProjects(userId: string): Promise<MirrorProject[]>
   updateProject(id: string, patch: Partial<MirrorProject>): Promise<MirrorProject | null>
+  /** Permanently removes a project and everything scoped to it (build runs,
+   * uploaded/scraped assets). Callers must verify ownership before calling
+   * this — it does not re-check `userId` itself. */
+  deleteProject(id: string): Promise<void>
   /** Atomically transitions a project into `building` only if it is not
    * already in an active build/deploy state, preventing a duplicate build
    * or follow-up prompt from double-launching a provider run

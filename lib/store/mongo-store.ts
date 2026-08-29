@@ -1,6 +1,6 @@
 import type { DataStore } from "@/lib/store/store"
 import { cryptoId } from "@/lib/store/id"
-import { projectsCol, buildRunsCol, creditTransactionsCol, ensureIndexes } from "@/lib/db/collections"
+import { projectsCol, buildRunsCol, creditTransactionsCol, projectAssetsCol, ensureIndexes } from "@/lib/db/collections"
 import type { MirrorProject, BuildRun, CreditTransaction, ProjectEvent, ConversationMessage } from "@/lib/types/project"
 
 const STARTING_CREDITS = 500
@@ -122,6 +122,15 @@ export class MongoStore implements DataStore {
       { returnDocument: "after" },
     )
     return result ? stripMongoId(result) : null
+  }
+
+  async deleteProject(id: string): Promise<void> {
+    const [projects, buildRuns, assets] = await Promise.all([projectsCol(), buildRunsCol(), projectAssetsCol()])
+    await Promise.all([
+      projects.deleteOne({ id }),
+      buildRuns.deleteMany({ mirrorProjectId: id }),
+      assets.deleteMany({ projectId: id }),
+    ])
   }
 
   async claimBuildSlot(id: string, patch: Partial<MirrorProject>): Promise<MirrorProject | null> {
